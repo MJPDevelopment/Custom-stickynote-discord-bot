@@ -11,7 +11,7 @@ const { Client, Intents, MessageEmbed } = require('discord.js');
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
 
 const token = 'YOUR TOKEN HERE';
-const channelId = 'CHANNEL ID HERE'; // ADD THE CHANNEL ID HERE 
+const channelId = 'CHANNEL ID HERE'; // ADD THE CHANNEL ID HERE
 const prefix = '!sticky';
 const allowedRoleIds = ['ROLE ID HERE', 'ROLE ID HERE'];
 const togglePrefix = '!togglesticky';
@@ -32,7 +32,7 @@ client.once('ready', async () => {
     const embed = new MessageEmbed()
       .setTitle('Sticky Note')
       .setDescription('No sticky note set.')
-      .setColor('BLUE'); 
+      .setColor('BLUE');
     const newStickyMessage = await channel.send({ embeds: [embed] });
     stickyMessageId = newStickyMessage.id;
   }
@@ -59,10 +59,11 @@ client.on('messageCreate', async (message) => {
       if (!stickyContent) return message.reply('Please provide content for the sticky note.');
 
       const channel = await client.channels.fetch(channelId);
-      const stickyMessage = await channel.messages.fetch(stickyMessageId);
-
-      if (stickyMessage) {
-        await stickyMessage.delete();
+      try {
+        const stickyMessage = await channel.messages.fetch(stickyMessageId);
+        if (stickyMessage) await stickyMessage.delete();
+      } catch (error) {
+        console.error('Failed to fetch or handle sticky message:', error);
       }
 
       const embed = new MessageEmbed()
@@ -79,19 +80,19 @@ client.on('messageCreate', async (message) => {
     }
   }
 
-  if (member.roles.cache.has(triggerRoleId) && stickyBotActive) {
-    const channel = await client.channels.fetch(channelId);
-    const stickyMessage = await channel.messages.fetch(stickyMessageId);
-
-    if (stickyMessage) {
-      await stickyMessage.delete();
-      const newStickyMessage = await channel.send({ embeds: [stickyMessage.embeds[0]]
-      });
-  
-      stickyMessageId = newStickyMessage.id;
+    if (member.roles.cache.has(triggerRoleId) && stickyBotActive) {
+      const channel = await client.channels.fetch(channelId);
+      try {
+        const stickyMessage = await channel.messages.fetch(stickyMessageId);
+        if (stickyMessage) {
+          await stickyMessage.delete();
+          const newStickyMessage = await channel.send({ embeds: [stickyMessage.embeds[0]] });
+          stickyMessageId = newStickyMessage.id;
+        }
+      } catch (error) {
+        console.error('Failed to fetch or handle sticky message:', error);
       }
     }
-  });
-  
-  client.login(token);
-  
+});
+
+client.login(token);
